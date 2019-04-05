@@ -1,6 +1,8 @@
 #ifndef _NEWJOY_CULIBLP_HPP_
 #define _NEWJOY_CULIBLP_HPP_
 
+// Not sure about this
+#define BS 32
 float lpsolve(float* A, float* b, float* c, float* xb, int* bi, int m, int n);
 int entering_index(float* e, int n);
 void extract_column(float* M, float* v, int start_i, int stride, int size);
