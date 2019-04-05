@@ -9,8 +9,8 @@
 float *c, *A, *b, *xb;
 int* bi;
 float z;
-struct timespec ev_start, ev_end, lv_start, lv_end, b_start, b_end, alloc_start,
-    alloc_end, dealloc_start, dealloc_end, init_start, init_end;
+// struct timespec ev_start, ev_end, lv_start, lv_end, b_start, b_end, alloc_start,
+//     alloc_end, dealloc_start, dealloc_end, init_start, init_end;
 struct timespec blas_end;
 void help();
 /****************** MAIN *********************/

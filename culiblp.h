@@ -1,6 +1,9 @@
 #ifndef _NEWJOY_CULIBLP_HPP_
 #define _NEWJOY_CULIBLP_HPP_
 
+struct timespec ev_start, ev_end, lv_start, lv_end, b_start, b_end, alloc_start,
+  alloc_end, dealloc_start, dealloc_end, init_start, init_end;
+
 // Not sure about this
 #define BS 32
 float lpsolve(float* A, float* b, float* c, float* xb, int* bi, int m, int n);
