@@ -1,3 +1,6 @@
+# local build file
+build
+
 # Prerequisites
 *.d
 

@@ -1,11 +1,15 @@
 #ifndef _NEWJOY_CULIBLP_HPP_
 #define _NEWJOY_CULIBLP_HPP_
 
-struct timespec ev_start, ev_end, lv_start, lv_end, b_start, b_end, alloc_start,
+extern struct timespec ev_start, ev_end, lv_start, lv_end, b_start, b_end, alloc_start,
   alloc_end, dealloc_start, dealloc_end, init_start, init_end;
+extern struct timespec blas_end;
 
 // Not sure about this
 #define BS 32
+#define MAX_ITER 1000
+#define EPS 1e-8
+#define R2C(i,j,s) (((j)*(s))+(i))
 float lpsolve(float* A, float* b, float* c, float* xb, int* bi, int m, int n);
 int entering_index(float* e, int n);
 void extract_column(float* M, float* v, int start_i, int stride, int size);

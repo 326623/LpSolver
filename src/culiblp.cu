@@ -4,7 +4,8 @@
 
 #include <cublas.h>
 #include <cuda_runtime.h>
-#include "cublas_v2.h"
+// #include "cublas_v2.h"
+#include "cublas.h"
 int kn, km, km1;
 int* devidx;
 float *devred, *devtemp;
@@ -14,7 +15,7 @@ int* it1m;
 // test stuff
 float lpsolve(float* A, float* b, float* c, float* xb, int* bi, int m, int n) {
   int i, opt;
-  cublasStatus_t stat;
+  cublasStatus stat;
   float *devc, *devA, *devb;
   // Binv: Basis matrix inverse
   // newBinv: temporary matrix inverse for swap purposes
@@ -291,10 +292,10 @@ float lpsolve(float* A, float* b, float* c, float* xb, int* bi, int m, int n) {
     clock_gettime(CLOCK_REALTIME, &ev_start);
     /* Timing */
     // y = cb*Binv
-    cublasSgemm(’N’, ’N’, 1, m, m, 1.0f, devcb, 1, devBinv, m, 0.0f, devy, 1);
+    cublasSgemm('N', 'N', 1, m, m, 1.0f, devcb, 1, devBinv, m, 0.0f, devy, 1);
     cublasScopy(m, devy, 1, &devyb[1], 1);
     // e = [1 y]*[-c ; A]
-    cublasSgemm(’N’, ’N’, 1, n, m + 1, 1.0f, devyb, 1, devD, m + 1, 0.0f, deve,
+    cublasSgemm('N', 'N', 1, n, m + 1, 1.0f, devyb, 1, devD, m + 1, 0.0f, deve,
                 1);
     /* Timing */
     clock_gettime(CLOCK_REALTIME, &blas_end);
@@ -312,7 +313,7 @@ float lpsolve(float* A, float* b, float* c, float* xb, int* bi, int m, int n) {
     clock_gettime(CLOCK_REALTIME, &lv_start);
     /* Timing */
     extract_column(devA, devA_e, ei, n, m);
-    cublasSgemv(’N’, m, m, 1.0f, devBinv, m, devA_e, 1, 0.0f, devalpha, 1);
+    cublasSgemv('N', m, m, 1.0f, devBinv, m, devA_e, 1, 0.0f, devalpha, 1);
     int num_max;
     cudaMemset(devnum_max, 0, 1);
     compute_theta<<<km, BS>>>(devxb, devalpha, devtheta, devtheta_flag, m,
@@ -334,7 +335,7 @@ float lpsolve(float* A, float* b, float* c, float* xb, int* bi, int m, int n) {
       break;
     }
     // Binv = E*Binv
-    cublasSgemm(’N’, ’N’, m, m, m, 1.0f, devE, m, devBinv, m, 0.0f, devnewBinv,
+    cublasSgemm('N', 'N', m, m, m, 1.0f, devE, m, devBinv, m, 0.0f, devnewBinv,
                 m);
     cublasScopy(m * m, devnewBinv, 1, devBinv, 1);
     /* Timing */
@@ -344,7 +345,7 @@ float lpsolve(float* A, float* b, float* c, float* xb, int* bi, int m, int n) {
     // cb[lv] = c[ev];
     update_bi_cb<<<km, BS>>>(devbi, devcb, devc, li, ei);
     // xb=Binv*b
-    cublasSgemv(’N’, m, m, 1.0f, devBinv, m, devb, 1, 0.0f, devxb, 1);
+    cublasSgemv('N', m, m, 1.0f, devBinv, m, devb, 1, 0.0f, devxb, 1);
     i++;
   } while (i < MAX_ITER);
   if (opt == 1) {
@@ -545,15 +546,15 @@ __global__ void compute_theta(float* xb, float* alpha, float* theta,
   }
 }
 __global__ void compute_new_E(float* E, float* alpha, int m, int li,
-                              
+                              float qth) {
   int i = blockIdx.y * blockDim.y + threadIdx.y;
   int j = blockIdx.x * blockDim.x + threadIdx.x;
   int s = gridDim.x * blockDim.x;
   int id = AT(i, j, s);
   if (id < m) {
-  alpha[id] = -alpha[id] / qth;
-  if (id == li) alpha[id] = 1 / qth;
-  E[R2C(id, li, m)] = alpha[id];
+    alpha[id] = -alpha[id] / qth;
+    if (id == li) alpha[id] = 1 / qth;
+    E[R2C(id, li, m)] = alpha[id];
   }
 }
 __global__ void update_bi_cb(int* bi, float* cb, float* c, int li, int ei) {
