@@ -1,5 +1,8 @@
+#include <string.h>
+
 #include "liblp.h"
 #include "matman.h"
+
 #define EPS 1e-8
 int entering_index(float* v, int size) {
   int i;

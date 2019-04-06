@@ -1,6 +1,7 @@
 #include <cblas.h>
 #include <sys/types.h>
 #include <time.h>
+#include <string.h>
 #include "liblp.h"
 #include "matman.h"
 #define EPS 1e-8
@@ -43,8 +44,8 @@ float z;
 void help();
 /****************** MAIN *********************/
 int main(int argc, char** argv) {
-  int i, opt, ret;
-  FILE* sourcefile;
+  int i = 0, opt = 3; //, ret;
+  FILE* sourcefile = NULL;
   struct timespec start, end, ev_start, ev_end, lv_start, lv_end, b_start,
       b_end;
   struct timespec blas_end;
@@ -167,6 +168,8 @@ int main(int argc, char** argv) {
     // Binv = E*Binv
     cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, m, m, m, 1, E, m,
                 Binv, m, 0, newBinv, m);
+    // TODO: can simply swap the pointer here
+    // swap(Binv, newBinv);
     memcpy(Binv, newBinv, m * m * sizeof(float));
     /* Timing */
     clock_gettime(CLOCK_REALTIME, &b_end);

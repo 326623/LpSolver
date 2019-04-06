@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "matman.h"
 /**
  * Allocate array of float initialized to all bits 0.
