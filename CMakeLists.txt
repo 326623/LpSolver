@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.10.1) # for CUDA support
 if(MSVC)
-  add_compile_options(/W3 /WX)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3 /WX")
 else()
-  add_compile_options(-W -Wall -Werror -I"/usr/local/cuda/include")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall -Werror")
 endif()
 enable_language(CUDA)
 set (CMAKE_CXX_STANDARD 11)
