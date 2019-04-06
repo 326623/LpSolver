@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10.3) # for CUDA support
+cmake_minimum_required(VERSION 3.10.1) # for CUDA support
 if(MSVC)
   add_compile_options(/W3 /WX)
 else()
@@ -24,5 +24,5 @@ add_executable( cpu_solver src/lpsolver.c )
 target_link_libraries( cpu_solver PRIVATE lpsolver )
 
 add_executable( gpu_solver src/culpsolver.cpp )
-target_link_libraries( gpu_solver PRIVATE gpu_solver )
+target_link_libraries( gpu_solver PRIVATE lpsolver )
 
