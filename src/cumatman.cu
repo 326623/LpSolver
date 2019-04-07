@@ -1,4 +1,5 @@
 #include "cumatman.h"
+
 /**
 * Allocate array of float initialized to all bits 0.
 * Returns 1 if there is an error, 0 otherwise

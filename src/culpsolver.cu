@@ -1,5 +1,9 @@
 #include <sys/types.h>
 #include <time.h>
+#include <string.h>
+#include <stdio.h>
+#include <math.h>
+
 #include "culiblp.h"
 #include "cumatman.h"
 /**

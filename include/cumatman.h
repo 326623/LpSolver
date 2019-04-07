@@ -1,6 +1,8 @@
 #ifndef _NEWJOY_CUMATMAN_HPP_
 #define _NEWJOY_CUMATMAN_HPP_
 
+#include <stdio.h>
+#define R2C(i,j,s) (((j)*(s))+(i))
 int allocate_array(float** a, int m, int n);
 int allocate_int_array(int** a, int m, int n);
 void display_array(const char* name, float* a, int m, int n);

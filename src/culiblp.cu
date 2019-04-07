@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <float.h>
+
 #include "culiblp.h"
 #include "cumatman.h"
 
