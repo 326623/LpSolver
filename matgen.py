@@ -15,20 +15,44 @@ outFileDir = "./matrices/"
 #-----------------------------------------------
 from popen2 import popen4
 import sys
+import multiprocessing
+from multiprocessing import Pool
 
+def do_cmd(item):
+    iteration, m, n = item
+    cmdLine = programsDir + program + " " + outFileDir + sys.argv[1] + str(
+        iteration) + ".in " + str(m) + " " + str(n)
+    print("Execution of program: " + cmdLine)
+    execOut, execIn = popen4(cmdLine)
+    output = execOut.read()
 
 def main():
     m = 2
     n = 2
+    m_list = []
+    n_list = []
+    iteration_list = []
     for iteration in range(iterations):
-        cmdLine = programsDir + program + " " + outFileDir + sys.argv[1] + str(
-            iteration) + ".in " + str(m) + " " + str(n)
-        print("Execution of program: " + cmdLine)
-        execOut, execIn = popen4(cmdLine)
-        output = execOut.read()
+        m_list.append(m)
+        n_list.append(n)
+        iteration_list.append(iteration)
         m = m + 2
         n = n + 2
-        print("Done")
+    pool = Pool(multiprocessing.cpu_count())
+    # pool = Pool(1)
+
+    for _ in pool.imap(do_cmd, zip(iteration_list, m_list, n_list)):
+        pass
+
+    print("Done")
+        # cmdLine = programsDir + program + " " + outFileDir + sys.argv[1] + str(
+        #     iteration) + ".in " + str(m) + " " + str(n)
+        # print("Execution of program: " + cmdLine)
+        # execOut, execIn = popen4(cmdLine)
+        # output = execOut.read()
+        # m = m + 2
+        # n = n + 2
+        # print("Done")
 
 
 #--------------------------------------------------

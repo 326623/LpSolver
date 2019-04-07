@@ -3,7 +3,7 @@
 # Config section
 #----------------------------
 #Set the list of programs to be run
-programs = ["lpsolver", "culpsolver"]
+programs = ["cpu_solver", "gpu_solver"]
 #Define the directory containing the programs to be run (relative to this script)
 programsDir = "./"
 #Define the number of executions for each program with each matrix
@@ -77,8 +77,8 @@ def main():
             bTimes = []
             for p in [0, 1]:
                 cmdLine = programsDir + programs[p] + " " + fileName
-                print "Execution #" + str(iteration + 1) + " of program: "
-                +programs[p] + " with matrix in " + fileName
+                print("Execution #" + str(iteration + 1) + " of program: " +
+                      programs[p] + " with matrix in " + fileName)
                 execOUT, execIN = popen4(cmdLine)
                 print "Waiting for the results of the determinant calculation"
                 output = execOUT.read()
@@ -95,11 +95,11 @@ def main():
                     bTimes.append(bres.group(1))
                 else:
                     bTimes.append("NaN")
-                    res = optRE.search(output)
-                    if type(res) == type(noptRE.search("Problem")):
-                        opt.append(res.group(1))
-                    else:
-                        opt.append("NaN")
+                res = optRE.search(output)
+                if type(res) == type(noptRE.search("Problem")):
+                    opt.append(res.group(1))
+                else:
+                    opt.append("NaN")
                 if p == 0:
                     DATAFILE.write(
                         str(numCons) + "\t" + str(numVar) + "\t" + str(size) +
@@ -122,10 +122,10 @@ def main():
                               str(numCons) + ";" + str(numVar) + ";" +
                               str(size) + ";" + str(times[p]) + ";" +
                               str(opt[p]) + "\n")
-                if opt[0] == opt[1]:
-                    OUTFILE.write("Fitting: OK\n")
-                else:
-                    OUTFILE.write("Fitting: KO\n")
+            if opt[0] == opt[1]:
+                OUTFILE.write("Fitting: OK\n")
+            else:
+                OUTFILE.write("Fitting: KO\n")
 
     print "Done"
     print "Data saved in " + dataFileName

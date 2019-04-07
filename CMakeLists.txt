@@ -31,3 +31,4 @@ target_link_libraries( cpu_solver PRIVATE lpsolver )
 add_executable( gpu_solver src/culpsolver.cu )
 target_link_libraries( gpu_solver PRIVATE lpsolver )
 
+add_executable( popmat src/popmat.c )
