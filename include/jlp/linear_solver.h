@@ -22,7 +22,6 @@
  * Author: yangqp5@outlook.com (New Joy)
  *
  */
-
 #ifndef _JLP_LINEAR_SOLVER_H_
 #define _JLP_LINEAR_SOLVER_H_
 #include <vector>
@@ -69,6 +68,7 @@ void solve(const std::vector<std::vector<double>>& A,
   std::vector<double> simplex_multiplier{m};
   std::vector<double> exchange_reduction{m};
   std::vector<double> eta{m};
+  double objective_value = 0.0;
 
   for (int iteration_pos = 0; iteration_pos < num_iterations; ++iteration_pos) {
     // Compute simplex multiplier
@@ -137,7 +137,14 @@ void solve(const std::vector<std::vector<double>>& A,
     // Update
     basic_indices[leaving_index] = entering_index;
 
-    coefficients[leaving_index] = 
+    coefficients[leaving_index] = c[entering_index];
+    basic_solutions[leaving_index] = minimal_ratio_test;
+    for (int i = 0; i < m; ++i) {
+      if (i != leaving_index) {
+        basic_solutions[i] -= minimal_ratio_test * exchange_reduction[i];
+      }
+    }
+    objective_value += minimal_ratio_test * best_entering_cost;
   }
 }
 } // namespace compute_tools
