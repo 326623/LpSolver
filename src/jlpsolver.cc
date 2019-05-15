@@ -39,17 +39,19 @@ int main(int argc, char* argv[]) {
   std::vector<std::vector<double>> A(m, std::vector<double>(n));
   std::vector<double> b(m), c(n);
 
-  for (int i = 0; i < n; ++i)
+  for (int i = 0; i < n; ++i) {
     input_problem >> c[i];
+    c[i] = -c[i];
+  }
 
   for (int i = 0; i < m; ++i)
     input_problem >> b[i];
 
   for (int i = 0; i < m; ++i)
-    for (int j = 0; j < n; ++i)
+    for (int j = 0; j < n; ++j)
       input_problem >> A[i][j];
 
   // call solve
-  solve(A, b, c);
+  std::cout << solve(A, b, c) << '\n';
   return 0;
 }

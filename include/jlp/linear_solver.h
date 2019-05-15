@@ -24,11 +24,22 @@
  */
 #ifndef _JLP_LINEAR_SOLVER_H_
 #define _JLP_LINEAR_SOLVER_H_
-#include <vector>
-#include <limits>
 #include <cassert>
+#include <iostream>
+#include <limits>
+#include <vector>
 
 namespace compute_tools {
+enum ProblemStatus {
+  OPTIMAL,
+
+  UNBOUND,
+
+  // The solver didn't have a chance to prove anything
+  INIT,
+
+  INFEASIBLE,
+};
 // Forget about generic code, it is so much harder to implement. Go easy on
 // yourself
 // template <template <typename> typename Matrix,
@@ -41,17 +52,16 @@ namespace compute_tools {
 
 // A is a matrix of size m x n. b is a vector of size m, c is a vector of size
 // n.
-void solve(const std::vector<std::vector<double>>& A,
-           const std::vector<double>& b, std::vector<double>& c,
-           int num_iterations = 10) {
+ProblemStatus
+solve(const std::vector<std::vector<double>>& A, const std::vector<double>& b,
+      std::vector<double>& c, int num_iterations = 10) {
   int m = A.size();
   int n = A.front().size();
   assert(m > 0 && n > 0 && n >= m && "m == 0 or n == 0 or n < m");
 
   // Initialization
   std::vector<std::vector<double>> inverse_B(m, std::vector<double>(m, 0));
-  for (int i = 0; i < m; ++i)
-    inverse_B[i][i] = 1.0;
+  for (int i = 0; i < m; ++i) inverse_B[i][i] = 1.0;
 
   std::vector<int> basic_indices(m);
   std::vector<int> nonbasic_indices(n - m);
@@ -63,8 +73,7 @@ void solve(const std::vector<std::vector<double>>& A,
     basic_solutions[i - offset] = b[i - offset];
   }
 
-  for (int i = 0; i < n - m; ++i)
-    nonbasic_indices[i] = i;
+  for (int i = 0; i < n - m; ++i) nonbasic_indices[i] = i;
 
   std::vector<double> simplex_multiplier(m);
   std::vector<double> exchange_reduction(m);
@@ -98,7 +107,7 @@ void solve(const std::vector<std::vector<double>>& A,
     // WARNING: Please be careful with floating point issues
     if (best_entering_cost >= 0 || entering_index == -1) {
       // Optimal
-      return;
+      return ProblemStatus::OPTIMAL;
     }
 
     for (int i = 0; i < m; ++i) {
@@ -124,14 +133,14 @@ void solve(const std::vector<std::vector<double>>& A,
 
     if (leaving_index == -1) {
       // Unbounded
-      return;
+      return ProblemStatus::UNBOUND;
     }
 
     // Need to compute a column \eta of the elementary matrix that is used to
     // update the inverse of B for the next iteration
     double alpha_leaving = exchange_reduction[leaving_index];
     for (int i = 0; i < m; ++i) {
-      eta[i] = - exchange_reduction[i] / alpha_leaving;
+      eta[i] = -exchange_reduction[i] / alpha_leaving;
     }
     eta[leaving_index] = 1 / alpha_leaving;
 
@@ -146,8 +155,11 @@ void solve(const std::vector<std::vector<double>>& A,
       }
     }
     objective_value += minimal_ratio_test * best_entering_cost;
-  }
+    std::cout << objective_value << '\n';
+  } // End of Simplex loop
+  // The solver couldn't solve it under n iterations.
+  return INIT;
 }
-} // namespace compute_tools
+}  // namespace compute_tools
 
 #endif /* _JLP_LINEAR_SOLVER_H_ */
