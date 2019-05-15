@@ -20,6 +20,7 @@ static bool ValidateInputFile(const char* flagname, const std::string& filename)
       return false;
     }
   }
+  return true;
 }
 
 // Check if one specify the correct file for input
@@ -33,10 +34,22 @@ int main(int argc, char* argv[]) {
   gflags::ParseCommandLineFlags(&argc, &argv, true);
   int m, n;
   // Reads in the problem
-  input_problem >> m >> n;
-
-  std::vector<std::vector<double>> A{m, std::vector<double>(n)};
-  std::vector<double> b{m}, c{n};
   std::ifstream input_problem(FLAGS_input_file);
+  input_problem >> m >> n;
+  std::vector<std::vector<double>> A(m, std::vector<double>(n));
+  std::vector<double> b(m), c(n);
+
+  for (int i = 0; i < n; ++i)
+    input_problem >> c[i];
+
+  for (int i = 0; i < m; ++i)
+    input_problem >> b[i];
+
+  for (int i = 0; i < m; ++i)
+    for (int j = 0; j < n; ++i)
+      input_problem >> A[i][j];
+
+  // call solve
   solve(A, b, c);
+  return 0;
 }

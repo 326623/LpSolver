@@ -26,6 +26,7 @@
 #define _JLP_LINEAR_SOLVER_H_
 #include <vector>
 #include <limits>
+#include <cassert>
 
 namespace compute_tools {
 // Forget about generic code, it is so much harder to implement. Go easy on
@@ -48,15 +49,15 @@ void solve(const std::vector<std::vector<double>>& A,
   assert(m > 0 && n > 0 && n >= m && "m == 0 or n == 0 or n < m");
 
   // Initialization
-  std::vector<std::vector<double>> inverse_B{m, std::vector(m, 0)};
+  std::vector<std::vector<double>> inverse_B(m, std::vector<double>(m, 0));
   for (int i = 0; i < m; ++i)
     inverse_B[i][i] = 1.0;
 
-  std::vector<int> basic_indices{m};
-  std::vector<int> nonbasic_indices{n - m};
-  std::vector<double> coefficients{m};
-  std::vector<double> basic_solutions{m};
-  for (int offset = n - m, int i = offset; i < n; ++i) {
+  std::vector<int> basic_indices(m);
+  std::vector<int> nonbasic_indices(n - m);
+  std::vector<double> coefficients(m);
+  std::vector<double> basic_solutions(m);
+  for (int offset = n - m, i = offset; i < n; ++i) {
     coefficients[i - offset] = c[i];
     basic_indices[i - offset] = i;
     basic_solutions[i - offset] = b[i - offset];
@@ -65,9 +66,9 @@ void solve(const std::vector<std::vector<double>>& A,
   for (int i = 0; i < n - m; ++i)
     nonbasic_indices[i] = i;
 
-  std::vector<double> simplex_multiplier{m};
-  std::vector<double> exchange_reduction{m};
-  std::vector<double> eta{m};
+  std::vector<double> simplex_multiplier(m);
+  std::vector<double> exchange_reduction(m);
+  std::vector<double> eta(m);
   double objective_value = 0.0;
 
   for (int iteration_pos = 0; iteration_pos < num_iterations; ++iteration_pos) {
@@ -114,10 +115,10 @@ void solve(const std::vector<std::vector<double>>& A,
     for (int i = 0; i < m; ++i) {
       if (exchange_reduction[i] > 0) {
         double ratio_test = basic_solutions[i] / exchange_reduction[i];
-      }
-      if (ratio_test < minimal_ratio_test) {
-        leaving_index = i;
-        minimal_ratio_test = ratio_test;
+        if (ratio_test < minimal_ratio_test) {
+          leaving_index = i;
+          minimal_ratio_test = ratio_test;
+        }
       }
     }
 

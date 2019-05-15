@@ -22,8 +22,8 @@ add_library( lpsolver
   src/cumatman.cu
   src/liblp.c
   src/matman.c)
-target_include_directories( lpsolver PUBLIC include )
-target_link_libraries( lpsolver PUBLIC -lcublas ${BLAS_LIBRARIES} )
+target_include_directories( lpsolver PUBLIC include ${BLAS_INCLUDE_DIR} ${GFALGS_INCLUDE_DIR} )
+target_link_libraries( lpsolver PUBLIC -lcublas ${BLAS_LIBRARIES} ${GFLAGS_LIBRARIES} )
 
 add_executable( cpu_solver src/lpsolver.c )
 target_link_libraries( cpu_solver PRIVATE lpsolver )
