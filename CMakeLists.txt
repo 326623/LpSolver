@@ -13,8 +13,8 @@ set(CMAKE_C_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer")
 set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -fno-omit-frame-pointer")
 #set(CMAKE_CUDA_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Xcompiler -fno-omit-frame-pointer")
 #set(CMAKE_CUDA_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -Xcompiler -fno-omit-frame-pointer")
-find_package( BLAS )
-
+find_package( BLAS REQUIRED )
+find_package( gflags REQUIRED )
 
 add_library( lpsolver
   STATIC
@@ -30,5 +30,8 @@ target_link_libraries( cpu_solver PRIVATE lpsolver )
 
 add_executable( gpu_solver src/culpsolver.cu )
 target_link_libraries( gpu_solver PRIVATE lpsolver )
+
+add_executable( jlpsolver src/jlpsolver.cc )
+target_link_libraries( jlpsolver PRIVATE lpsolver )
 
 add_executable( popmat src/popmat.c )

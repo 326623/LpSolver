@@ -18,6 +18,7 @@ import sys
 import multiprocessing
 from multiprocessing import Pool
 
+# Please remember to create the matrices file at the current directory
 def do_cmd(item):
     iteration, m, n = item
     cmdLine = programsDir + program + " " + outFileDir + sys.argv[1] + str(
