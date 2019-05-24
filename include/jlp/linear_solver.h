@@ -52,7 +52,7 @@ enum ProblemStatus {
 
 // A is a matrix of size m x n. b is a vector of size m, c is a vector of size
 // n.
-ProblemStatus
+std::tuple <ProblemStatus, std::vector<double>, std::vector<int>>
 solve(const std::vector<std::vector<double>>& A, const std::vector<double>& b,
       std::vector<double>& c, int num_iterations = 10) {
   int m = A.size();
@@ -77,6 +77,7 @@ solve(const std::vector<std::vector<double>>& A, const std::vector<double>& b,
 
   std::vector<double> simplex_multiplier(m);
   std::vector<double> exchange_reduction(m);
+  std::vector<double> tmp_column(m);
   std::vector<double> eta(m);
   double objective_value = 0.0;
 
@@ -91,23 +92,29 @@ solve(const std::vector<std::vector<double>>& A, const std::vector<double>& b,
 
     // Pricing, choose the what gives the lowest
     int entering_index = -1;
+    int nonbasic_picked = -1;
     // Any positive value that is the lowest means it is optimal
     double best_entering_cost = 1.0;
-    for (int index : nonbasic_indices) {
+    // for (int index : nonbasic_indices) {
+    for (int i = 0; i < n - m; ++i) {
+      int index = nonbasic_indices[i];
       double entering_cost = c[index];
-      for (int i = 0; i < m; ++i) {
-        entering_cost -= simplex_multiplier[i] * A[i][index];
+      for (int j = 0; j < m; ++j) {
+        entering_cost -= simplex_multiplier[j] * A[j][index];
       }
+      std::cout << entering_cost << ' ';
       if (entering_cost < best_entering_cost) {
         best_entering_cost = entering_cost;
         entering_index = index;
+        nonbasic_picked = i;
       }
     }
+    std::cout << '\n' << "pick: " << nonbasic_picked << '\n';
 
     // WARNING: Please be careful with floating point issues
     if (best_entering_cost >= 0 || entering_index == -1) {
       // Optimal
-      return ProblemStatus::OPTIMAL;
+      return {ProblemStatus::OPTIMAL, basic_solutions, basic_indices};
     }
 
     for (int i = 0; i < m; ++i) {
@@ -133,7 +140,7 @@ solve(const std::vector<std::vector<double>>& A, const std::vector<double>& b,
 
     if (leaving_index == -1) {
       // Unbounded
-      return ProblemStatus::UNBOUND;
+      return {ProblemStatus::UNBOUND, basic_solutions, basic_indices};
     }
 
     // Need to compute a column \eta of the elementary matrix that is used to
@@ -145,7 +152,25 @@ solve(const std::vector<std::vector<double>>& A, const std::vector<double>& b,
     eta[leaving_index] = 1 / alpha_leaving;
 
     // Update
+    nonbasic_indices[nonbasic_picked] = basic_indices[leaving_index];
     basic_indices[leaving_index] = entering_index;
+
+    // Update inverse_B
+    for (int col = 0; col < m; ++col) {
+      for (int row = 0; row < m; ++row) {
+        tmp_column[row] = inverse_B[row][col];
+      }
+
+      for (int row = 0; row < m; ++row) {
+        if (row != leaving_index) {
+          inverse_B[row][col] =
+              tmp_column[row] + eta[row] * tmp_column[leaving_index];
+        }
+        else {
+          inverse_B[row][col] = eta[row] * tmp_column[leaving_index];
+        }
+      }
+    }
 
     coefficients[leaving_index] = c[entering_index];
     basic_solutions[leaving_index] = minimal_ratio_test;
@@ -155,10 +180,27 @@ solve(const std::vector<std::vector<double>>& A, const std::vector<double>& b,
       }
     }
     objective_value += minimal_ratio_test * best_entering_cost;
-    std::cout << objective_value << '\n';
+
+    // DEBUGGING
+    std::cout << "ratio_test " << minimal_ratio_test << '\n';
+    // for (int i = 0; i < n; ++i) {
+    //   std::cout << c[i] << ' ';
+    // }
+    // std::cout << '\n';
+    // for (int row = 0; row < m; ++row) {
+    //   for (int col = 0; col < m; ++col) {
+    //     if (col != m - 1)
+    //       std::cout << inverse_B[row][col] << ' ';
+    //     else
+    //       std::cout << inverse_B[row][col] << '\n';
+    //   }
+    // }
+    // std::cout << "Iteration " << iteration_pos
+    //           << ", entering_index is: " << entering_index
+    //           << ", objective_value: " << objective_value << '\n';
   } // End of Simplex loop
   // The solver couldn't solve it under n iterations.
-  return INIT;
+  return {INIT, basic_solutions, basic_indices};
 }
 }  // namespace compute_tools
 

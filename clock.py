@@ -19,6 +19,7 @@ from popen2 import popen4
 import re
 import sys
 
+epsilon = 1e-20
 
 def getFileList(wildcardedFileNames):
     """Gets the list of files from command line. If some
@@ -109,15 +110,16 @@ def main():
                         "\t" + str(evTimes[0]) + "\t" + str(lvTimes[0]) +
                         "\t" + str(bTimes[0]) + "\t")
                 else:
+                    # divide by zero error, add a small fraction onto it
                     DATAFILE.write(
                         str(times[1]) + "\t" +
-                        str(float(times[0]) / float(times[1])) + "\n")
+                        str(float(times[0]) / (float(times[1]) + epsilon)) + "\n")
                     INNERFILE.write(
                         str(evTimes[1]) + "\t" + str(lvTimes[1]) + "\t" +
                         str(bTimes[1]) + "\t" +
-                        str(float(evTimes[0]) / float(evTimes[1])) + "\t" +
-                        str(float(lvTimes[0]) / float(lvTimes[1])) + "\t" +
-                        str(float(bTimes[0]) / float(bTimes[1])) + "\n")
+                        str(float(evTimes[0]) / (float(evTimes[1]) + epsilon)) + "\t" +
+                        str(float(lvTimes[0]) / (float(lvTimes[1]) + epsilon)) + "\t" +
+                        str(float(bTimes[0]) / (float(bTimes[1]) + epsilon)) + "\n")
                 OUTFILE.write(programs[p] + ";" + fileName + ";" +
                               str(numCons) + ";" + str(numVar) + ";" +
                               str(size) + ";" + str(times[p]) + ";" +

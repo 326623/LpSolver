@@ -15,6 +15,7 @@ set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -fno-omit-fr
 #set(CMAKE_CUDA_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -Xcompiler -fno-omit-frame-pointer")
 find_package( BLAS REQUIRED )
 find_package( gflags REQUIRED )
+find_package( glog REQUIRED )
 
 add_library( lpsolver
   STATIC
@@ -23,7 +24,7 @@ add_library( lpsolver
   src/liblp.c
   src/matman.c)
 target_include_directories( lpsolver PUBLIC include ${BLAS_INCLUDE_DIR} ${GFALGS_INCLUDE_DIR} )
-target_link_libraries( lpsolver PUBLIC -lcublas ${BLAS_LIBRARIES} ${GFLAGS_LIBRARIES} )
+target_link_libraries( lpsolver PUBLIC -lcublas ${BLAS_LIBRARIES} ${GFLAGS_LIBRARIES} glog::glog )
 
 add_executable( cpu_solver src/lpsolver.c )
 target_link_libraries( cpu_solver PRIVATE lpsolver )

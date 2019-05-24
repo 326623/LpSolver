@@ -181,6 +181,21 @@ int main(int argc, char** argv) {
     // xb=Binv*b
     cblas_sgemv(CblasRowMajor, CblasNoTrans, m, m, 1, Binv, m, b, 1, 0, xb, 1);
     i++;
+    // DEBUGGING
+    /* { */
+    /*   /\* int row, col; *\/ */
+    /*   /\* // print the whole matrix out *\/ */
+    /*   /\* for (row = 0; row < m; ++row) { *\/ */
+    /*   /\*   for (col = 0; col < m; ++col) { *\/ */
+    /*   /\*     if (col != m - 1) *\/ */
+    /*   /\*       printf("%f ", Binv[row * m + col]); *\/ */
+    /*   /\*     else *\/ */
+    /*   /\*       printf("%f\n", Binv[row * m + col]); *\/ */
+    /*   /\*   } *\/ */
+    /*   /\* } *\/ */
+    /*   cblas_sgemv(CblasRowMajor, CblasNoTrans, 1, m, 1, cb, m, xb, 1, 0, &z, 1); */
+    /*   printf("Iteration %d, entering_index is: %d, objective_value: %f\n", i, ev, z); */
+    /* } */
   } while (i < MAX_ITER);
   if (opt == 1) {
     cblas_sgemv(CblasRowMajor, CblasNoTrans, 1, m, 1, cb, m, xb, 1, 0, &z, 1);
