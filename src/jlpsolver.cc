@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
   int num_iteration = 1000;
   std::vector<double> basic_solution;
   std::vector<int> basic_indices;
-  std::tie(status, basic_solution, basic_indices) = solve(A, b, c, num_iteration);
+  std::tie(status, basic_solution, basic_indices) = Solve(A, b, c, num_iteration);
   assert(basic_solution.size() == basic_indices.size() && "size unmatched");
   // Checks feasibility
   for (int row = 0; row < m; ++row) {

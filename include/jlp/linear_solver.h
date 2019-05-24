@@ -29,17 +29,8 @@
 #include <limits>
 #include <vector>
 
-namespace compute_tools {
-enum ProblemStatus {
-  OPTIMAL,
+#include "status.h"
 
-  UNBOUND,
-
-  // The solver didn't have a chance to prove anything
-  INIT,
-
-  INFEASIBLE,
-};
 // Forget about generic code, it is so much harder to implement. Go easy on
 // yourself
 // template <template <typename> typename Matrix,
@@ -50,11 +41,16 @@ enum ProblemStatus {
 //   Matrix<T> B()
 // }
 
+// There are plenty of space for optimization, like:
+// 1. changing the memory layout of the matries to column major.
+// 2. change the implementation to adapt sparse matrix-vector multiplication
+// 3. auto vectorization.
+
 // A is a matrix of size m x n. b is a vector of size m, c is a vector of size
 // n.
 std::tuple <ProblemStatus, std::vector<double>, std::vector<int>>
-solve(const std::vector<std::vector<double>>& A, const std::vector<double>& b,
-      std::vector<double>& c, int num_iterations = 10) {
+Solve(const std::vector<std::vector<double>>& A, const std::vector<double>& b,
+      std::vector<double>& c, int num_iterations = 1000) {
   int m = A.size();
   int n = A.front().size();
   assert(m > 0 && n > 0 && n >= m && "m == 0 or n == 0 or n < m");
