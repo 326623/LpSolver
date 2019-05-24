@@ -86,7 +86,7 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < static_cast<int>(basic_indices.size()); ++i) {
       left_b += A[row][basic_indices[i]] * basic_solution[i];
     }
-    assert(almost_equal(left_b, b[row]) && "solution is infeasible.");
+    assert(almost_equal(left_b, b[row], 10) && "solution is infeasible.");
   }
 
   for (int i = 0; i < m; ++ i) {

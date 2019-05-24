@@ -27,7 +27,12 @@ int main(int argc, char* argv[]) {
   }
   fprintf(stderr, "c written.\n");
   for (i = 0; i < m; i++) {
-    fprintf(file, "%f ", (float)(rand() % MAX));
+    // Avoids b == 0.0 at all cost
+    float b = 0.0;
+    while (b == 0.0) {
+      b = (float)(rand() % MAX);
+    }
+    fprintf(file, "%f ", b);
   }
   fprintf(stderr, "b written.\n");
   for (i = 0; i < m; i++) {

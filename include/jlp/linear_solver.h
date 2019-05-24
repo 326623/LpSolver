@@ -102,14 +102,12 @@ solve(const std::vector<std::vector<double>>& A, const std::vector<double>& b,
       for (int j = 0; j < m; ++j) {
         entering_cost -= simplex_multiplier[j] * A[j][index];
       }
-      std::cout << entering_cost << ' ';
       if (entering_cost < best_entering_cost) {
         best_entering_cost = entering_cost;
         entering_index = index;
         nonbasic_picked = i;
       }
     }
-    std::cout << '\n' << "pick: " << nonbasic_picked << '\n';
 
     // WARNING: Please be careful with floating point issues
     if (best_entering_cost >= 0 || entering_index == -1) {
@@ -182,7 +180,7 @@ solve(const std::vector<std::vector<double>>& A, const std::vector<double>& b,
     objective_value += minimal_ratio_test * best_entering_cost;
 
     // DEBUGGING
-    std::cout << "ratio_test " << minimal_ratio_test << '\n';
+    // DLOG << "ratio_test " << minimal_ratio_test << '\n';
     // for (int i = 0; i < n; ++i) {
     //   std::cout << c[i] << ' ';
     // }
@@ -195,9 +193,9 @@ solve(const std::vector<std::vector<double>>& A, const std::vector<double>& b,
     //       std::cout << inverse_B[row][col] << '\n';
     //   }
     // }
-    // std::cout << "Iteration " << iteration_pos
-    //           << ", entering_index is: " << entering_index
-    //           << ", objective_value: " << objective_value << '\n';
+    DLOG(INFO) << "Iteration " << iteration_pos
+        // << ", entering_index is: " << entering_index
+               << ", objective_value: " << objective_value;
   } // End of Simplex loop
   // The solver couldn't solve it under n iterations.
   return {INIT, basic_solutions, basic_indices};
