@@ -27,9 +27,18 @@
 #include "status.h"
 
 namespace compute_tools {
+// Takes in a linear program instance and perfrom Revised Simplex Method. Return
+// the basic solution and their indices.
+// A is a dense matrix of size m x n. b is a vector of size m, c is a vector
+// of size n.
 std::tuple <ProblemStatus, std::vector<double>, std::vector<int>>
 CudaSolve(const std::vector<std::vector<double>>& A, const std::vector<double>& b,
           std::vector<double>& c, int num_iterations = 1000) {
+  int m = A.size();
+  DCHECK(m > 0) << "m == 0";
+  int n = A.front().size();
+  DCHECK(n > 0 && n >= m) << "m == 0 or n == 0 or n < m";
+
 }
 } // namespace compute_tools
 

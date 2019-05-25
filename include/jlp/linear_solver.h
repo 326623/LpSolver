@@ -46,14 +46,15 @@
 // 2. change the implementation to adapt sparse matrix-vector multiplication
 // 3. auto vectorization.
 
-// A is a matrix of size m x n. b is a vector of size m, c is a vector of size
-// n.
+// A is a dense matrix of size m x n. b is a vector of size m, c is a vector of
+// size n.
 std::tuple <ProblemStatus, std::vector<double>, std::vector<int>>
 Solve(const std::vector<std::vector<double>>& A, const std::vector<double>& b,
       std::vector<double>& c, int num_iterations = 1000) {
   int m = A.size();
+  DCHECK(m > 0) << "m == 0";
   int n = A.front().size();
-  assert(m > 0 && n > 0 && n >= m && "m == 0 or n == 0 or n < m");
+  DCHECK(n > 0 && n >= m) << "m == 0 or n == 0 or n < m";
 
   // Initialization
   std::vector<std::vector<double>> inverse_B(m, std::vector<double>(m, 0));

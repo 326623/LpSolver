@@ -17,11 +17,13 @@ typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type
 almost_equal(T x, T y, int ulp = 1)
     // as in how many unit of precision, let's default to 1
 {
+  const auto diff = std::abs(x - y);
   // the machine epsilon has to be scaled to the magnitude of the values used
   // and multiplied by the desired precision in ULPs (units in the last place)
-  return std::abs(x-y) <= std::numeric_limits<T>::epsilon() * std::abs(x+y) * ulp
-      // unless the result is subnormal
-      || std::abs(x-y) < std::numeric_limits<T>::min();
+  return diff <= std::numeric_limits<T>::epsilon() * std::abs(x + y) * ulp ||
+         // unless the result is subnormal
+         // https://en.wikipedia.org/wiki/Denormal_number
+         diff < std::numeric_limits<T>::min();
 }
 
 static bool ValidateInputFile(const char* flagname, const std::string& filename) {
@@ -78,7 +80,7 @@ int main(int argc, char* argv[]) {
   std::vector<double> basic_solution;
   std::vector<int> basic_indices;
   std::tie(status, basic_solution, basic_indices) = Solve(A, b, c, num_iteration);
-  assert(basic_solution.size() == basic_indices.size() && "size unmatched");
+  DCHECK_EQ(basic_solution.size(), basic_indices.size()) << "size unmatched";
   // Checks feasibility
   for (int row = 0; row < m; ++row) {
     double left_b = 0.0;
@@ -86,7 +88,7 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < static_cast<int>(basic_indices.size()); ++i) {
       left_b += A[row][basic_indices[i]] * basic_solution[i];
     }
-    assert(almost_equal(left_b, b[row], 10) && "solution is infeasible.");
+    DCHECK(almost_equal(left_b, b[row], 10)) << "solution is infeasible.";
   }
 
   for (int i = 0; i < m; ++ i) {
