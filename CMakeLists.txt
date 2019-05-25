@@ -23,6 +23,7 @@ add_library( lpsolver
   src/cumatman.cu
   src/liblp.c
   src/matman.c)
+
 target_include_directories( lpsolver PUBLIC include ${BLAS_INCLUDE_DIR} ${GFALGS_INCLUDE_DIR} )
 target_link_libraries( lpsolver PUBLIC -lcublas ${BLAS_LIBRARIES} ${GFLAGS_LIBRARIES} glog::glog )
 
@@ -34,5 +35,8 @@ target_link_libraries( gpu_solver PRIVATE lpsolver )
 
 add_executable( jlpsolver src/jlpsolver.cc )
 target_link_libraries( jlpsolver PRIVATE lpsolver )
+
+add_executable( cuda_jlpsolver src/cuda_jlpsolver.cc )
+target_link_libraries( cuda_jlpsolver PRIVATE lpsolver )
 
 add_executable( popmat src/popmat.c )

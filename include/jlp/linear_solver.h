@@ -58,24 +58,41 @@ Solve(const std::vector<std::vector<double>>& A, const std::vector<double>& b,
 
   // Initialization
   std::vector<std::vector<double>> inverse_B(m, std::vector<double>(m, 0));
-  for (int i = 0; i < m; ++i) inverse_B[i][i] = 1.0;
-
   std::vector<int> basic_indices(m);
   std::vector<int> nonbasic_indices(n - m);
-  std::vector<double> coefficients(m);
+  std::vector<double> basic_coefficients(m);
   std::vector<double> basic_solutions(m);
+
+  // Treats the slack variables as initail basis
+  // Assumes A is passed with slack variables in the back. And the submatrix of
+  // slack variables is an identity matrix.
+  // The slack variables' coefficients are all zero, therefore the objective
+  // value is zero initially.
+  for (int i = 0; i < m; ++i) inverse_B[i][i] = 1.0;
+
   for (int offset = n - m, i = offset; i < n; ++i) {
-    coefficients[i - offset] = c[i];
+    basic_coefficients[i - offset] = c[i];
     basic_indices[i - offset] = i;
     basic_solutions[i - offset] = b[i - offset];
   }
 
+  // for (int i = 0, offset = n - m; i < m; ++i) {
+  //   basic_coefficients[i] = c[i + offset];
+  //   basic_indices[i] = i + offset;
+  //   basic_solutions[i] = b[i];
+  // }
+
   for (int i = 0; i < n - m; ++i) nonbasic_indices[i] = i;
 
+  // Intermediate variables
+
+  // For price out
   std::vector<double> simplex_multiplier(m);
   std::vector<double> exchange_reduction(m);
+  // For the update of inverse B
   std::vector<double> tmp_column(m);
   std::vector<double> eta(m);
+  // initial objective value
   double objective_value = 0.0;
 
   for (int iteration_pos = 0; iteration_pos < num_iterations; ++iteration_pos) {
@@ -83,7 +100,7 @@ Solve(const std::vector<std::vector<double>>& A, const std::vector<double>& b,
     for (int i = 0; i < m; ++i) {
       simplex_multiplier[i] = 0.0;
       for (int j = 0; j < m; ++j) {
-        simplex_multiplier[i] += coefficients[j] * inverse_B[j][i];
+        simplex_multiplier[i] += basic_coefficients[j] * inverse_B[j][i];
       }
     }
 
@@ -167,7 +184,7 @@ Solve(const std::vector<std::vector<double>>& A, const std::vector<double>& b,
       }
     }
 
-    coefficients[leaving_index] = c[entering_index];
+    basic_coefficients[leaving_index] = c[entering_index];
     basic_solutions[leaving_index] = minimal_ratio_test;
     for (int i = 0; i < m; ++i) {
       if (i != leaving_index) {
