@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <tuple>
+#include <limits>
 
 #include <gflags/gflags.h>
 #include <glog/logging.h>
@@ -79,11 +80,13 @@ int main(int argc, char* argv[]) {
   int num_iteration = 1000;
   std::vector<float> basic_solution;
   std::vector<int> basic_indices;
+  // Obviously there is some bug in CUDA 9.1, which forces one to upgrade to
+  // CUDA 10.1 as a solution
   std::tie(status, basic_solution, basic_indices) = CudaSolve(A, b, c, num_iteration);
   DCHECK_EQ(basic_solution.size(), basic_indices.size()) << "size unmatched";
   // Checks feasibility
   for (int row = 0; row < m; ++row) {
-    float left_b = 0.0;
+    float left_b = 0.0f;
     // all nonbasic indices' value is zero
     for (int i = 0; i < static_cast<int>(basic_indices.size()); ++i) {
       left_b += A[row][basic_indices[i]] * basic_solution[i];

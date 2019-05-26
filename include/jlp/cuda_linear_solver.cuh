@@ -26,11 +26,16 @@
 #define _JLP_CUDA_LINEAR_SOLVER_HPP_
 #include "status.h"
 
+#define BLOCK_SIZE 16
+#define GRID_SIZE 16
+
 namespace compute_tools {
-__global__ void InitializeVar(float* device_inv_B, float* device_b,
-                              float* device_c, float* device_basic_coefficients,
-                              float* device_basic_indices, float* device_nonbasic_indices,
-                              float* basic_solutions, int m, int n) {
+__global__ void InitializeVar(const float* device_b, const float* device_c,
+                              float* device_inv_B,
+                              float* device_basic_coefficients,
+                              int* device_basic_indices,
+                              int* device_nonbasic_indices,
+                              float* device_basic_solutions, int m, int n) {
   int index = blockDim.x * blockIdx.x + threadIdx.x;
   int stride = blockDim.x * gridDim.x;
   int offset = n - m;
@@ -53,23 +58,53 @@ __global__ void ComputeSimplexMultiplier(float* device_simplex_multiplier,
   int index = blockDim.x * blockIdx.x + threadIdx.x;
   int stride = blockDim.x * gridDim.x;
   for (int i = index; i < m; i += stride) {
-    simplex_multiplier[i] = 0.0f;
+    device_simplex_multiplier[i] = 0.0f;
     for (int j = 0; j < m; ++ j) {
-      simplex_multiplier[i] += basic_coefficients[j] * device_inv_B[j][i];
+      device_simplex_multiplier[i] +=
+          device_basic_coefficients[j] * device_inv_B[j * m + i];
     }
+  }
+}
+
+__global__ void PricingOut(const float* device_simplex_multipiler,
+                           const float* device_A, const float* device_c,
+                           const int* device_nonbasic_indices,
+                           // output variables
+                           int* device_entering_index,
+                           int* device_nonbasic_picked,
+                           float* device_best_entering_cost,
+                           // sizes
+                           int m, int n) {
+  // __shared__ float best_entering_costs[BLOCK_SIZE];
+  // __shared__ int best_entering_index[BLOCK_SIZE];
+  // __shared__ int best_nonbasic_picked[BLOCK_SIZE];
+
+  // int best_entering_cost_self;
+  // int best_entering_index_self;
+  // int best_nonbasic_picked
+  int index = blockDim.x * blockIdx.x + threadIdx.x;
+  int stride = blockDim.x * gridDim.x;
+  for (int i = 0; i < n - m; i += stride) {
+    int index = device_nonbasic_indices[i];
+    float entering_cost = device_c[index];
+    for (int j = 0; j < m; ++j) {
+      entering_cost -= device_simplex_multipiler[j] * device_A[j][index];
+    }
+    if (entering_cost < best_entering_costs[])
   }
 }
 
 // Takes in a linear program instance and perfrom Revised Simplex Method.
 // Return the basic solution and their indices. A is a dense matrix of size
 // m x n. b is a vector of size m, c is a vector of size n.
+// std::tuple<ProblemStatus, std::vector<float>, std::vector<int>> CudaSolve(
 std::tuple<ProblemStatus, std::vector<float>, std::vector<int>> CudaSolve(
     const std::vector<std::vector<float>>& host_A,
     const std::vector<float>& host_b, std::vector<float>& host_c,
     int num_iterations = 1000) {
-  int m = A.size();
+  int m = host_A.size();
   DCHECK(m > 0) << "m == 0";
-  int n = A.front().size();
+  int n = host_A.front().size();
   DCHECK(n > 0 && n >= m) << "m == 0 or n == 0 or n < m";
   DCHECK(n == host_c.size()) << "Incompatibility of size between A and c";
   DCHECK(m == host_b.size()) << "Incompatibility of size between A and b";
@@ -97,9 +132,10 @@ std::tuple<ProblemStatus, std::vector<float>, std::vector<int>> CudaSolve(
   cudaMalloc(&device_basic_solutions, m * sizeof(float));
 
   // Initialize these vectors with kernel
-  InitializeVar(device_inv_B, device_b, device_c, device_basic_coefficients,
-                device_basic_indices, device_nonbasic_indices, basic_solutions,
-                m, n);
+  InitializeVar<<<64, 64>>>(device_b, device_c, device_inv_B,
+                            device_basic_coefficients, device_basic_indices,
+                            device_nonbasic_indices, device_basic_solutions, m,
+                            n);
 
   // Intermediate variables to aid computation
   float* device_simplex_multiplier;
@@ -115,13 +151,20 @@ std::tuple<ProblemStatus, std::vector<float>, std::vector<int>> CudaSolve(
   cudaMalloc(&device_eta, m * sizeof(float));
   cudaMalloc(&device_objective_value, sizeof(float));
 
-  for (int iteration_pos = 0; iteration_pos < num_iterations; ++iteration_pos) {
-    ComputeSimplexMultiplier(device_simplex_multiplier,
-                             device_basic_coefficients, device_inv_B, m);
+  int* device_entering_index;
+  int* device_nonbasic_picked;
+  float* device_best_entering_cost;
+  cudaMalloc(&device_entering_index, sizeof(int));
+  cudaMalloc(&device_nonbasic_picked, sizeof(int));
+  cudaMalloc(&device_best_entering_cost, sizeof(float));
 
-    int entering_index = -1;
-    int nonbasic_picked = -1;
-    float best_entering_cost = 1.0;
+  for (int iteration_pos = 0; iteration_pos < num_iterations; ++iteration_pos) {
+    ComputeSimplexMultiplier<<<64, 64>>>(
+        device_simplex_multiplier, device_basic_coefficients, device_inv_B, m);
+
+    // __device__ int entering_index = -1;
+    // __device__ int nonbasic_picked = -1;
+    // __device__ float best_entering_cost = 1.0;
   }
 
   // Freeing cuda memory
@@ -135,11 +178,21 @@ std::tuple<ProblemStatus, std::vector<float>, std::vector<int>> CudaSolve(
   cudaFree(device_basic_coefficients);
   cudaFree(device_basic_solutions);
 
-  cudaFree(simplex_multiplier);
-  cudaFree(exchange_reduction);
-  cudaFree(tmp_column);
-  cudaFree(eta);
-  cudaFree(objective_value);
+  cudaFree(device_simplex_multiplier);
+  cudaFree(device_exchange_reduction);
+  cudaFree(device_tmp_column);
+  cudaFree(device_eta);
+  cudaFree(device_objective_value);
+
+  cudaFree(device_entering_index);
+  cudaFree(device_nonbasic_picked);
+  cudaFree(device_best_entering_cost);
+
+  // return std::tuple<ProblemStatus, std::vector<float>, std::vector<int>>(
+  //     {ProblemStatus::INIT, std::vector<float>(1), std::vector<int>(1)});
+  std::vector<float> a(1);
+  std::vector<int> b(1);
+  return {INIT, {}, {}};
 }
 } // namespace compute_tools
 

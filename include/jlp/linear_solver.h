@@ -31,6 +31,7 @@
 
 #include "status.h"
 
+namespace compute_tools {
 // Forget about generic code, it is so much harder to implement. Go easy on
 // yourself
 // template <template <typename> typename Matrix,
@@ -48,9 +49,9 @@
 
 // A is a dense matrix of size m x n. b is a vector of size m, c is a vector of
 // size n.
-std::tuple <ProblemStatus, std::vector<double>, std::vector<int>>
-Solve(const std::vector<std::vector<double>>& A, const std::vector<double>& b,
-      std::vector<double>& c, int num_iterations = 1000) {
+std::tuple<ProblemStatus, std::vector<double>, std::vector<int>> Solve(
+    const std::vector<std::vector<double>>& A, const std::vector<double>& b,
+    std::vector<double>& c, int num_iterations = 1000) {
   int m = A.size();
   DCHECK(m > 0) << "m == 0";
   int n = A.front().size();

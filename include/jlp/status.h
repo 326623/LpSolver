@@ -36,5 +36,6 @@ enum ProblemStatus {
 
   INFEASIBLE,
 };
+} // namespace compute_tools
 
 #endif /* _JLP_STATUS_HPP_ */
