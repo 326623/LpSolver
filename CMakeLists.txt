@@ -24,26 +24,27 @@ add_library( lpsolver
   src/culiblp.cu
   src/cumatman.cu
   src/liblp.c
-  src/matman.c)
+  src/matman.c
+  src/jlp/linear_solver.cc)
 
 target_include_directories( lpsolver PUBLIC include ${BLAS_INCLUDE_DIR} ${GFALGS_INCLUDE_DIR} )
 target_link_libraries( lpsolver PUBLIC -lcublas ${BLAS_LIBRARIES} ${GFLAGS_LIBRARIES} glog::glog ${GTEST_LIBRARIES})
 target_compile_features( lpsolver PUBLIC cxx_std_11 )
 
-add_executable( cpu_solver src/lpsolver.c )
-target_link_libraries( cpu_solver PRIVATE lpsolver )
+add_executable(cpu_solver src/lpsolver.c)
+target_link_libraries(cpu_solver PRIVATE lpsolver)
 
-add_executable( gpu_solver src/culpsolver.cu )
-target_link_libraries( gpu_solver PRIVATE lpsolver )
+add_executable(gpu_solver src/culpsolver.cu)
+target_link_libraries(gpu_solver PRIVATE lpsolver)
 
-add_executable( jlpsolver src/jlpsolver.cc )
-target_link_libraries( jlpsolver PRIVATE lpsolver )
+add_executable(jlpsolver src/jlpsolver.cc)
+target_link_libraries(jlpsolver PRIVATE lpsolver)
 
 # add_executable( cuda_jlpsolver src/cuda_jlpsolver.cu )
 # target_link_libraries( cuda_jlpsolver PRIVATE lpsolver )
 
 # benchmark solvers
-add_executable( benchmark_solver src/benchmark/benchmark_solvers.cc )
-target_link_libraries( benchmark_solver PRIVATE benchmark::benchmark lpsolver benchmark::benchmark_main)
+add_executable(benchmark_solver src/benchmark/benchmark_solvers.cc)
+target_link_libraries(benchmark_solver PRIVATE benchmark::benchmark lpsolver benchmark::benchmark_main)
 
-add_executable( popmat src/popmat.c )
+add_executable(popmat src/popmat.c)
