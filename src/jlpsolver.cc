@@ -4,6 +4,7 @@
 
 #include <gflags/gflags.h>
 #include <glog/logging.h>
+#include <gtest/gtest.h>
 
 #include "jlp/linear_solver.h"
 
@@ -89,6 +90,8 @@ int main(int argc, char* argv[]) {
       left_b += A[row][basic_indices[i]] * basic_solution[i];
     }
     DCHECK(almost_equal(left_b, b[row], 10)) << "solution is infeasible.";
+    // EXPECT_DOUBLE_EQ(left_b, b[row]) << "solution is infeasible.";
+    // EXPECT_NEAR(left_b, b[row], 10) << "solution is infeasible.";
   }
 
   for (int i = 0; i < m; ++ i) {

@@ -16,6 +16,7 @@ set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -fno-omit-fr
 find_package( BLAS REQUIRED )
 find_package( gflags REQUIRED )
 find_package( glog REQUIRED )
+find_package( GTest REQUIRED )
 
 add_library( lpsolver
   STATIC
@@ -25,7 +26,7 @@ add_library( lpsolver
   src/matman.c)
 
 target_include_directories( lpsolver PUBLIC include ${BLAS_INCLUDE_DIR} ${GFALGS_INCLUDE_DIR} )
-target_link_libraries( lpsolver PUBLIC -lcublas ${BLAS_LIBRARIES} ${GFLAGS_LIBRARIES} glog::glog )
+target_link_libraries( lpsolver PUBLIC -lcublas ${BLAS_LIBRARIES} ${GFLAGS_LIBRARIES} glog::glog ${GTEST_LIBRARIES})
 target_compile_features( lpsolver PUBLIC cxx_std_11 )
 
 add_executable( cpu_solver src/lpsolver.c )
@@ -37,7 +38,7 @@ target_link_libraries( gpu_solver PRIVATE lpsolver )
 add_executable( jlpsolver src/jlpsolver.cc )
 target_link_libraries( jlpsolver PRIVATE lpsolver )
 
-add_executable( cuda_jlpsolver src/cuda_jlpsolver.cu )
-target_link_libraries( cuda_jlpsolver PRIVATE lpsolver )
+# add_executable( cuda_jlpsolver src/cuda_jlpsolver.cu )
+# target_link_libraries( cuda_jlpsolver PRIVATE lpsolver )
 
 add_executable( popmat src/popmat.c )
