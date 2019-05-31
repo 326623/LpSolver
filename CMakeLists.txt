@@ -17,6 +17,7 @@ find_package( BLAS REQUIRED )
 find_package( gflags REQUIRED )
 find_package( glog REQUIRED )
 find_package( GTest REQUIRED )
+find_package( benchmark REQUIRED )
 
 add_library( lpsolver
   STATIC
@@ -40,5 +41,9 @@ target_link_libraries( jlpsolver PRIVATE lpsolver )
 
 # add_executable( cuda_jlpsolver src/cuda_jlpsolver.cu )
 # target_link_libraries( cuda_jlpsolver PRIVATE lpsolver )
+
+# benchmark solvers
+add_executable( benchmark_solver src/benchmark/benchmark_solvers.cc )
+target_link_libraries( benchmark_solver PRIVATE benchmark::benchmark lpsolver benchmark::benchmark_main)
 
 add_executable( popmat src/popmat.c )
