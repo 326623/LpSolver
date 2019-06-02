@@ -1,12 +1,13 @@
 #include <tuple>
 #include <vector>
+#include <thrust/device_vector>
 
 #include "jlp/linear_solver.cuh"
 #include "jlp/status.h"
 
 std::tuple<ProblemStatus, std::vector<float>, std::vector<int>> CudaSolve(
-    const std::vector<std::vector<float>>& host_A,
-    const std::vector<float>& host_b, std::vector<float>& host_c,
+    const std::vector<std::vector<float>>& A,
+    const std::vector<float>& b, std::vector<float>& c,
     int num_iterations = 1000) {
   int m = host_A.size();
   DCHECK(m > 0) << "m == 0";
@@ -14,19 +15,23 @@ std::tuple<ProblemStatus, std::vector<float>, std::vector<int>> CudaSolve(
   DCHECK(n > 0 && n >= m) << "m == 0 or n == 0 or n < m";
   DCHECK(n == host_c.size()) << "Incompatibility of size between A and c";
   DCHECK(m == host_b.size()) << "Incompatibility of size between A and b";
+  thrust::host_vector<float> host_A(m * n);
+  thrust::host_vector<float> host_b(m);
+  thrust::host_vector<float> host_c(n);
+  for (int i = 0; i < m; ++i)
+    for (int j = 0; j < n; ++j)
+      host_A[i][j] = A[i][j];
+  for (int i = 0; i < m; ++i)
+    host_b[i] = b[i];
+  for (int i = 0; i < n; ++i)
+    host_c[i] = c[i];
 
   // In this implementation, try less data transfer between CPU and GPU
-  float* device_A;
-  float* device_b;
-  float* device_c;
-  cudaMalloc(&device_A, (m * n) * sizeof(float));
-  cudaMalloc(&device_b, m * sizeof(float));
-  cudaMalloc(&device_c, n * sizeof(float));
-  cudaMemcpy(device_A, host_A.data(), (m * n) * sizeof(float), cudaMemcpyHostToDevice);
-  cudaMemcpy(device_b, host_b.data(), m * sizeof(float), cudaMemcpyHostToDevice);
-  cudaMemcpy(device_c, host_c.data(), n * sizeof(float), cudaMemcpyHostToDevice);
+  thrust::device_vector<float> device_A = host_A;
+  thrust::device_vector<float> device_b = host_b;
+  thrust::device_vector<float> device_c = host_c;
 
-  float* device_inv_B;
+  thrust::device_vector<float> device_inv_B;
   int* device_basic_indices;
   int* device_nonbasic_indices;
   float* device_basic_coefficients;
