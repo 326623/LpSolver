@@ -168,10 +168,10 @@ std::tuple<ProblemStatus, std::vector<double>, std::vector<int>> Solve(
     //       std::cout << inverse_B[row][col] << '\n';
     //   }
     // }
-    DLOG(INFO) << "Iteration "
-               << iteration_pos
-               // << ", entering_index is: " << entering_index
-               << ", objective_value: " << objective_value;
+    DLOG_EVERY_N(INFO, 100) << "Iteration "
+                            << iteration_pos
+                            // << ", entering_index is: " << entering_index
+                            << ", objective_value: " << objective_value;
   }  // End of Simplex loop
   // The solver couldn't solve it under n iterations.
   return {INIT, basic_solutions, basic_indices};

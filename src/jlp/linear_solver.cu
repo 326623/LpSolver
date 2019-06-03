@@ -5,6 +5,59 @@
 #include "jlp/linear_solver.cuh"
 #include "jlp/status.h"
 
+namespace compute_tools {
+// This code snippet is from
+// https://github.com/thrust/thrust/blob/master/Examples/strided_range.cu
+// strided_range([0, 1, 2, 3, 4, 5, 6], 1) -> [0, 1, 2, 3, 4, 5, 6]
+// strided_range([0, 1, 2, 3, 4, 5, 6], 2) -> [0, 2, 4, 6]
+// strided_range([0, 1, 2, 3, 4, 5, 6], 3) -> [0, 3, 6]
+// ...
+// strided_range(first, last, stride)
+template <typename Iterator>
+class strided_range {
+ public:
+  typedef typename thrust::iterator_difference<Iterator>::type difference_type;
+
+  struct stride_functor
+      : public thrust::unary_function<difference_type, difference_type> {
+    difference_type stride;
+
+    stride_functor(difference_type stride) : stride(stride) {}
+
+    __host__ __device__ difference_type
+    operator()(const difference_type& i) const {
+      return stride * i;
+    }
+  };
+
+  typedef typename thrust::counting_iterator<difference_type> CountingIterator;
+  typedef typename thrust::transform_iterator<stride_functor, CountingIterator>
+      TransformIterator;
+  typedef typename thrust::permutation_iterator<Iterator, TransformIterator>
+      PermutationIterator;
+
+  // type of the strided_range iterator
+  typedef PermutationIterator iterator;
+
+  // construct strided_range for the range [first,last)
+  strided_range(Iterator first, Iterator last, difference_type stride)
+      : first(first), last(last), stride(stride) {}
+
+  iterator begin(void) const {
+    return PermutationIterator(
+        first, TransformIterator(CountingIterator(0), stride_functor(stride)));
+  }
+
+  iterator end(void) const {
+    return begin() + ((last - first) + (stride - 1)) / stride;
+  }
+
+ protected:
+  Iterator first;
+  Iterator last;
+  difference_type stride;
+};
+
 std::tuple<ProblemStatus, std::vector<float>, std::vector<int>> CudaSolve(
     const std::vector<std::vector<float>>& A,
     const std::vector<float>& b, std::vector<float>& c,
@@ -31,79 +84,22 @@ std::tuple<ProblemStatus, std::vector<float>, std::vector<int>> CudaSolve(
   thrust::device_vector<float> device_b = host_b;
   thrust::device_vector<float> device_c = host_c;
 
-  thrust::device_vector<float> device_inv_B;
-  int* device_basic_indices;
-  int* device_nonbasic_indices;
-  float* device_basic_coefficients;
-  float* device_basic_solutions;
-  cudaMalloc(&device_inv_B, (m * m) * sizeof(float));
-  cudaMalloc(&device_basic_indices, m * sizeof(int));
-  cudaMalloc(&device_nonbasic_indices, (n - m) * sizeof(int));
-  cudaMalloc(&device_basic_coefficients, m * sizeof(float));
-  cudaMalloc(&device_basic_solutions, m * sizeof(float));
+  thrust::device_vector<float> device_inv_B(m * m);
+  thrust::device_vector<int> device_basic_indices(m);
+  thrust::device_vector<int> device_basic_indices(n - m);
+  thrust::device_vector<int> device_basic_coefficients(m);
+  thrust::device_vector<int> device_basic_solutions(m);
 
-  // Initialize these vectors with kernel
-  InitializeVar<<<64, 64>>>(device_b, device_c, device_inv_B,
-                            device_basic_coefficients, device_basic_indices,
-                            device_nonbasic_indices, device_basic_solutions, m,
-                            n);
-
-  // Intermediate variables to aid computation
-  float* device_simplex_multiplier;
-  float* device_exchange_reduction;
-  // For the update of inverse B
-  float* device_tmp_column;
-  float* device_eta;
-  // initial objective value
-  float* device_objective_value;
-  cudaMalloc(&device_simplex_multiplier, m * sizeof(float));
-  cudaMalloc(&device_exchange_reduction, m * sizeof(float));
-  cudaMalloc(&device_tmp_column, m * sizeof(float));
-  cudaMalloc(&device_eta, m * sizeof(float));
-  cudaMalloc(&device_objective_value, sizeof(float));
-
-  int* device_entering_index;
-  int* device_nonbasic_picked;
-  float* device_best_entering_cost;
-  cudaMalloc(&device_entering_index, sizeof(int));
-  cudaMalloc(&device_nonbasic_picked, sizeof(int));
-  cudaMalloc(&device_best_entering_cost, sizeof(float));
+  thrust::device_vector<float> device_simplex_multiplier(m);
+  thrust::device_vector<float> device_exchange_reduction(m);
+  thrust::device_vector<float> device_tmp_column(m);
+  thrust::device_vector<float> device_eta(m);
+  float objective_value = 0.0;
 
   for (int iteration_pos = 0; iteration_pos < num_iterations; ++iteration_pos) {
-    ComputeSimplexMultiplier<<<64, 64>>>(
-        device_simplex_multiplier, device_basic_coefficients, device_inv_B, m);
+    thrust::fill(device_simplex_multiplier.begin(),
+                 device_simplex_multiplier.end(), 0.0f);
 
-    // __device__ int entering_index = -1;
-    // __device__ int nonbasic_picked = -1;
-    // __device__ float best_entering_cost = 1.0;
   }
-
-  // Freeing cuda memory
-  cudaFree(device_A);
-  cudaFree(device_b);
-  cudaFree(device_c);
-
-  cudaFree(device_inv_B);
-  cudaFree(device_basic_indices);
-  cudaFree(device_nonbasic_indices);
-  cudaFree(device_basic_coefficients);
-  cudaFree(device_basic_solutions);
-
-  cudaFree(device_simplex_multiplier);
-  cudaFree(device_exchange_reduction);
-  cudaFree(device_tmp_column);
-  cudaFree(device_eta);
-  cudaFree(device_objective_value);
-
-  cudaFree(device_entering_index);
-  cudaFree(device_nonbasic_picked);
-  cudaFree(device_best_entering_cost);
-
-  // return std::tuple<ProblemStatus, std::vector<float>, std::vector<int>>(
-  //     {ProblemStatus::INIT, std::vector<float>(1), std::vector<int>(1)});
-  std::vector<float> a(1);
-  std::vector<int> b(1);
-  return {INIT, {}, {}};
 }
-
-}
+} // namespace compute_tools
