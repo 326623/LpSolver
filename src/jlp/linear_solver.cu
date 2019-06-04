@@ -86,7 +86,10 @@ std::tuple<ProblemStatus, std::vector<float>, std::vector<int>> CudaSolve(
 
   thrust::device_vector<float> device_inv_B(m * m);
   thrust::device_vector<int> device_basic_indices(m);
-  thrust::device_vector<int> device_basic_indices(n - m);
+  // replace this with nonbasic columns of A
+  // thrust::device_vector<int> device_nonbasic_indices(n - m);
+  thrust::device_vector<float> device_nonbasic_A(m * (n - m));
+  thrust::device_vector<float> device_nonbasic_c(n - m);
   thrust::device_vector<int> device_basic_coefficients(m);
   thrust::device_vector<int> device_basic_solutions(m);
 
@@ -99,7 +102,22 @@ std::tuple<ProblemStatus, std::vector<float>, std::vector<int>> CudaSolve(
   for (int iteration_pos = 0; iteration_pos < num_iterations; ++iteration_pos) {
     thrust::fill(device_simplex_multiplier.begin(),
                  device_simplex_multiplier.end(), 0.0f);
+    float alpha = 1.0f, beta = 0.0f;
+    // Compute simplex multiplier
+    cublasSgemv(handle, CUBLAS_OP_T, m, m, &alpha, device_inv_B.data(), m,
+                device_basic_coefficients.data(), &beta,
+                device_simplex_multiplier.data(), 1);
 
+    alpha = -1.0f;
+    beta = 1.0f;
+    // Need to copy the origin device_nonbasic_c
+    // device_nonbasic_c
+    cublasSgemv(handle, CUBLAS_OP_T, m, n - m, &alpha, device_nonbasic_A.data(),
+                n - m, device_simplex_multiplier.data(), &beta, device_nonbasic_c.data(), 1);
+    int entering_index = -1;
+    cublasIsamin(handle, n - m, device_nonbasic_c.data(), 1, &entering_index);
+
+    // Optimal?
   }
 }
 } // namespace compute_tools
